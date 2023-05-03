@@ -26,6 +26,6 @@ print (np.array(df))
 
 numpyData = {"valuesData": np.array(df), "entities": np.array(entitats)}
 print("serialize NumPy array into JSON and write into a file")
-with open("dades.json", "w") as write_file:
+with open("pokemon.json", "w") as write_file:
     json.dump(numpyData, write_file, cls=NumpyArrayEncoder)
 print("Done writing serialized NumPy array into file")
