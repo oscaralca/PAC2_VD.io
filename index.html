@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<header>
+<head>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <!--
@@ -9,112 +9,249 @@
    <script src="./js/d3.v4.min.js" charset="utf-8"></script>
   <script src="./js/d3-queue.min.js"></script>
   <script src="./js/d3-chord.v0.0.min.js"></script>
-</header>
+</head>
 
 <style>
-.navlink-user{
-  font-weight: bold;
+ * {
+  padding: 0;
+  margin: 0;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  text-decoration: none;
+  font-family: arial, tahoma;
+  list-style: none;
+  /*    outline: 1px solid brown;*/
+}
+
+/*   Start navigation bar   */
+
+nav {
+  height: 80px;
+  background-color: #222;
+  border-bottom: 1px solid #555
+}
+.logo {
+  padding: 10px;
+  width: auto;
+  float: left;
+}
+.logo img {
+  height: 55px;
+}
+.list-item {
+  float: left;
+  margin-right: 25px;
+  margin-top: 17px;
+}
+.list-item li {
+  float: left;
+  padding: 13px 13px;
+  font-size: 18px;
+  border-radius: 3px;
+  transition: all .7s ease-in-out;
+}
+.list-item li a {
+  color: #EEE;
+}
+.list-item li:hover {
+  background-color: brown;
+}
+
+/*   End navigation bar   */
+
+/*   Start nav bar for small screens   */
+
+.icon {
+  display: none;
+}
+.toggle {
+  float: right;
+  margin: 20px;
+  color: #EEE;
+  font-size: 30px;
+  border: 1px solid #EEE;
+  padding: 0px 5px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/*   End nav bar for small screens   */
+
+/*   Start media query   */
+
+@media (max-width: 1309px) {
+  .icon {
+    display: block;
+    width: 100%;
+    height: 80px;
+    background-color: #111;
+    border-bottom: 1px solid #444;
+  }
+  .list-item {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    top: -4px;
+    background-color: #222;
+    display: none;
+  }
+  .list-item li {
+    text-align: center;
+    display: block;
+    border-bottom: 1px solid #333;
+    float: none;
+  }
+}
+.tooltip {
+  position: absolute;
 }
 </style>
 <title>PAC2 Vistualització de dades</title>
 <body>
-  <nav class="navbar navbar-expand-md navbar-fixed-top navbar-light" role="navigation" role="navigation" style="background: #9aa698;">
+  <header>
+  <nav >
       <div class="container">
-            <a class="navbar-brand" href="#">PAC 2 Vistualització de dades</a>
-            
             <div class="collapse navbar-collapse" id="navbarNav">
-              <ul class="navbar-nav">
+              <ul class="list-item">
                 <li class="nav-item active" id="navbar1">
-                  <a class="nav-link" href="#section1">Bar chart <span class="sr-only"></span></a>
+                  <a class="nav-link" href="#section1">Bar chart</a>
                 </li>
-              </ul>
-              <ul class="navbar-nav">
                 <li class="nav-item active" id="navbar2">
-                  <a class="nav-link" href="#section2">Small multiple <span class="sr-only"></span></a>
+                  <a class="nav-link" href="#section2">Small multiple </a>
                 </li>
-              </ul>
-              <ul class="navbar-nav">
                 <li class="nav-item active" id="navbar3">
-                  <a class="nav-link" href="#section3">Chord diagram <span class="sr-only"></span></a>
+                  <a class="nav-link" href="#section3">Chord diagram </a>
                 </li>
               </ul>
             </div>
           
         </div>
   </nav>
+</header>
 </body> 
-  <div>
+<div  id="section1">
 
-   
+  <script>
+
+    // set the dimensions and margins of the graph
+    var margin = {top: 10, right: 30, bottom: 20, left: 50},
+        width1 = 900 - margin.left - margin.right,
+        height1 = 800 - margin.top - margin.bottom;
+    
+    // append the svg object to the body of the page
+    var svg1 = d3.select("#section1")
+      .append("svg")
+        .attr("width", width1 + margin.left + margin.right)
+        .attr("height", height1 + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform",
+              "translate(" + margin.left + "," + margin.top + ")");
+    
+    // Parse the Data
+    d3.csv("./data/videojocs_full.csv", function(data) {
+    
+      // List of subgroups = header of the csv files = soil condition here
+      var subgroups = data.columns.slice(1)
+    
+      // List of groups = species here = value of the first column called group -> I show them on the X axis
+      var groups = d3.map(data, function(d){return(d.Platform)}).keys()
+    
+      // Add X axis
+      var x = d3.scaleBand()
+          .domain(groups)
+          .range([0, width1])
+          .padding([0.2])
+      svg1.append("g")
+        .attr("transform", "translate(0," + height1 + ")")
+        .call(d3.axisBottom(x).tickSizeOuter(0));
+    
+      // Add Y axis
+      var y = d3.scaleLinear()
+        .domain([0, 1300])
+        .range([ height1, 0 ]);
+      svg1.append("g")
+        .call(d3.axisLeft(y));
+    
+      // color palette = one color per subgroup
+      var color = d3.scaleOrdinal()
+        .domain(subgroups)
+        .range(['#C7EFCF','#FE5F55','#EEF5DB'])
+    
+      //stack the data? --> stack per subgroup
+      var stackedData = d3.stack()
+        .keys(subgroups)
+        (data)
+    
+    
+      // ----------------
+      // Create a tooltip
+      // ----------------
+      var tooltip1 = d3.select("#section1")
+        .append("div")
+        .style("opacity", 0)
+        .attr("class", "tooltip")
+        .style("background-color", "white")
+        .style("border", "solid")
+        .style("border-width", "1px")
+        .style("border-radius", "5px")
+        .style("padding", "10px")
+    
+      // Three function that change the tooltip when user hover / move / leave a cell
+      var mouseover1 = function(d) {
+        var subgroupName = d3.select(this.parentNode).datum().key;
+        var subgroupValue = d.data[subgroupName];
+        tooltip1
+            .html( subgroupName + ": " + subgroupValue)
+            .style("opacity", 1)
+      }
+      var mousemove1 = function(d) {
+        tooltip1
+          .style("left", (d3.mouse(this)[0]+90) + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
+          .style("top", (d3.mouse(this)[1]) + "px")
+      }
+      var mouseleave1 = function(d) {
+        tooltip1
+          .style("opacity", 0)
+      }
+    
+      // Show the bars
+      svg1.append("g")
+        .selectAll("g")
+        // Enter in the stack data = loop key per key = group per group
+        .data(stackedData)
+        .enter().append("g")
+          .attr("fill", function(d) { return color(d.key); })
+          .selectAll("rect")
+          // enter a second time = loop subgroup per subgroup to add all rectangles
+          .data(function(d) { return d; })
+          .enter().append("rect")
+            .attr("x", function(d) { return x(d.data.Platform); })
+            .attr("y", function(d) { return y(d[1]); })
+            .attr("height", function(d) { return y(d[0]) - y(d[1]); })
+            .attr("width",x.bandwidth())
+            .attr("stroke", "grey")
+          .on("mouseover", mouseover1)
+          .on("mousemove", mousemove1)
+          .on("mouseleave", mouseleave1)
+    
+    })
+    
+    </script>
 </div>
-<div class="section one" id="section1">
-
-<script>
-
-
-  // set the dimensions and margins of the graph
-  var margin1 = {top: 30, right: 30, bottom: 70, left: 60},
-      width1 = 1000 - margin1.left - margin1.right,
-      height1 = 1000 - margin1.top - margin1.bottom;
-
-  // append the svg object to the body of the page
-  var svg1 = d3.select("#section1")
-    .append("svg")
-      .attr("width", width1 + margin1.left + margin1.right)
-      .attr("height", height1 + margin1.top + margin1.bottom)
-    .append("g")
-      .attr("transform",
-            "translate(" + margin1.left + "," + margin1.top + ")");
-
-  // Parse the Data
-  d3.csv("./data/videojocs_simple.csv", function(data) {
-
-  // X axis
-  var x = d3.scaleBand()
-    .range([ 0, width1 ])
-    .domain(data.map(function(d) { return d.Platform; }))
-    .padding(0.2);
-  svg1.append("g")
-    .attr("transform", "translate(0," + height1 + ")")
-    .call(d3.axisBottom(x))
-    .selectAll("text")
-      .attr("transform", "translate(-10,0)rotate(-45)")
-      .style("text-anchor", "end");
-
-  // Add Y axis
-  var y = d3.scaleLinear()
-    .domain([0, 1300])
-    .range([ height1, 0]);
-  svg1.append("g")
-    .call(d3.axisLeft(y));
-
-  // Bars
-  svg1.selectAll("mybar")
-    .data(data)
-    .enter()
-    .append("rect")
-      .attr("x", function(d) { return x(d.Platform); })
-      .attr("y", function(d) { return y(d.Global_Sales); })
-      .attr("width", x.bandwidth())
-      .attr("height", function(d) { return height1 - y(d.Global_Sales); })
-      .attr("fill", "#69b3a2")
-
-  })
-
-</script>
-</div>
-<div class="section two" id="section2">
+<div style = "display:none" id="section2">
 
 
   <script>
 
     // set the dimensions and margins of the graph
     var margin = {top: 30, right: 0, bottom: 30, left: 50},
-        width = 250 - margin.left - margin.right,
+        width = 260 - margin.left - margin.right,
         height = 210 - margin.top - margin.bottom;
     
     //Read the data
-    d3.csv("./data/videojocs_full.csv", function(data) {
+    d3.csv("./data/videojocs_temps.csv", function(data) {
     
       // group the data: I want to draw one line per group
       var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
@@ -137,8 +274,8 @@
                 "translate(" + margin.left + "," + margin.top + ")");
     
       // Add X axis 
-      var x = d3.scaleBand()
-        .domain(d3.extent(data, function(d) { return d.Type_Sales; }))
+      var x = d3.scaleLinear()
+        .domain(d3.extent(data, function(d) { return d.Year; }))
         .range([ 0, width ]);
       svg
         .append("g")
@@ -147,40 +284,28 @@
     
       //Add Y axis
       var y = d3.scaleLinear()
-        .domain([0, d3.max(data, function(d) { return +d.Sales; })])
-        .range([ height, 0 ]);
+      .domain([0, d3.max(data, function(d) { return +d.Global_Sales; })])
+      .range([ height, 0 ]);
       svg.append("g")
-        .call(d3.axisLeft(y).ticks(5));
+      .call(d3.axisLeft(y).ticks(5));
     
       // color palette
       var color = d3.scaleOrdinal()
         .domain(allKeys)
-        .range(['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999'])
+        .range(['#000000'])
     
         // Draw the line
-        svg.enter()
-        .append("rect")
-        .attr("fill", function(d){ return color(d.key) })
-        .attr("stroke", "none")
-        .append("rect")
-          .attr("x", function(d) { return x(d.Type_Sales); })
-          .attr("y", function(d) { return y(d.Sales); })
-          .attr("width", x.bandwidth())
-          .attr("height", function(d) { return height - y(d.Sales); })
-          .attr("fill", "#69b3a2")
-
-
-
-
-        .selectAll("mybar")
-        .data(data)
-        .enter()
-        .append("rect")
-          .attr("x", function(d) { return x(d.Type_Sales); })
-          .attr("y", function(d) { return y(d.Sales); })
-          .attr("width", x.bandwidth())
-          .attr("height", function(d) { return height - y(d.Sales); })
-          .attr("fill", "#69b3a2")
+        svg
+        .append("path")
+        .attr("fill", "none")
+        .attr("stroke", function(d){ return color(d.key) })
+        .attr("stroke-width", 1.9)
+        .attr("d", function(d){
+        return d3.line()
+          .x(function(d) { return x(d.Year); })
+          .y(function(d) { return y(+d.Global_Sales); })
+          (d.values)
+      })
     
       // Add titles
       svg
@@ -195,7 +320,7 @@
     </script>
 
 </div>
-<div class="section three" id="section3">
+<div style = "display:none" id="section3">
   <script>
 
 var width3 = 720,
